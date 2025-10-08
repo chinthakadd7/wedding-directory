@@ -1,0 +1,64 @@
+# syntax=docker.io/docker/dockerfile:1
+
+# Base image
+FROM node:18-alpine AS base
+
+# Dependencies Layer
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+RUN npm install sharp
+
+# Build Layer
+FROM base AS builder
+WORKDIR /app
+
+# Reuse node_modules from deps layer
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy all project files
+COPY . .
+
+# Accept build-time environment variables
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_GRAPHQL_URL
+ARG NEXT_PUBLIC_BASE_URL
+ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+
+# Inject build-time environment variables into the build
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_GRAPHQL_URL=${NEXT_PUBLIC_GRAPHQL_URL}
+ENV NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+
+# Build the Next.js app in standalone mode
+RUN npm run build
+
+# Production Layer
+FROM base AS runner
+WORKDIR /app
+
+# Create a safer non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy only the necessary build artifacts
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy environment file into production image (optional but not necessary if baked)
+COPY --from=builder --chown=nextjs:nodejs /app/.env.production .env
+
+USER nextjs
+
+EXPOSE 3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js", "-H", "0.0.0.0"]

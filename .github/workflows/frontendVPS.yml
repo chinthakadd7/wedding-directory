@@ -1,0 +1,71 @@
+name: Node.js CI Frontend
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    name: Build Frontend
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [20.18.0]
+
+    env:
+      NEXT_PUBLIC_GRAPHQL_URL: ${{ secrets.NEXT_PUBLIC_GRAPHQL_URL }}
+      NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+      NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+
+    steps:
+      # Checkout the code from GitHub repository
+      - uses: actions/checkout@v4
+
+      # Set up Node.js with the specified version
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      # stop pm2
+      - name: Stop pm2
+        run: |
+          pm2 stop 0
+
+      # Install dependencies in the frontend directory
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      # Copy files to the production directory
+      - name: Copy files to production directory
+        run: |
+          rm -rf /home/janitha/production/frontend/*
+          cp -R frontend/* /home/janitha/production/frontend/
+
+      #Delete existing .env file from frontend production directory
+      - name: Remove old .env file from frontend
+        run: |
+          rm -f /home/janitha/production/frontend/.env.production
+
+      # Set up environmental variables
+      - name: Add Environmental Variables
+        run: |
+          cd /home/janitha/production/frontend
+          touch .env.production
+          echo "NEXT_PUBLIC_GRAPHQL_URL=${{ secrets.NEXT_PUBLIC_GRAPHQL_URL }}" >> .env.production
+          echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" >> .env.production
+          echo "NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}" >> .env.production
+          echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}" >> .env.production
+
+      - name: Build production directory
+        run: |
+          cd /home/janitha/production/frontend
+          npm run build --if-present
+
+      - name: Restart pm2
+        run: |
+          pm2 restart 0
