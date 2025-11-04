@@ -15,7 +15,7 @@ export class OfferingEntity {
     @Column({ type: 'varchar', length: 20 })
     category: string;
 
-    @Column({ type: 'boolean', default: 'false' })
+    @Column({ type: 'boolean', default: true })
     visible: boolean;
 
     @Column({ type: 'varchar', length: 10, nullable: true })

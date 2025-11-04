@@ -44,7 +44,8 @@ export const OfferingRepository = (dataSource: DataSource): OfferingRepositoryTy
 
     async findOfferingsByFilters(category?: string, city?: string): Promise<OfferingEntity[]> {
       const query = this.createQueryBuilder('offering')
-        .leftJoinAndSelect('offering.vendor', 'vendor'); // Join with vendor
+        .leftJoinAndSelect('offering.vendor', 'vendor') // Join with vendor
+        .andWhere('offering.visible = :visible', { visible: true }); // Only public offerings
 
       if (category) {
         query.andWhere('offering.category = :category', { category });
