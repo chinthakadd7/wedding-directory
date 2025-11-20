@@ -69,10 +69,7 @@ const VendorDashBoard: React.FC = () => {
       <div className="container mx-auto px-4 py-6">
         <VendorBanner vendor={vendorInfo} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <QuickActions />
-          <ToDo />
-        </div>
+       
 
         {/* About Section */}
         <div className="flex items-center mt-8 mb-8">
