@@ -18,6 +18,7 @@ interface Package {
   features: string[];
   offeringId?: string;
   visible: boolean;
+  reservationSystemNeeded: boolean;
 }
 
 const EditPackages: React.FC = () => {
@@ -99,7 +100,8 @@ const EditPackages: React.FC = () => {
               description: pkg.description.trim(),
               pricing: numericPrice,
               features: validFeatures,
-              visible: pkg.visible
+              visible: pkg.visible,
+              reservationSystemNeeded: pkg.reservationSystemNeeded
             },
             offeringId
           }
@@ -122,7 +124,8 @@ const EditPackages: React.FC = () => {
               description: pkg.description.trim(),
               pricing: numericPrice,
               features: validFeatures,
-              visible: pkg.visible
+              visible: pkg.visible,
+              reservationSystemNeeded: pkg.reservationSystemNeeded
             }
           }
         });
@@ -180,7 +183,8 @@ const EditPackages: React.FC = () => {
         pricing: 0, 
         features: [""],
         offeringId,
-        visible: false
+        visible: false,
+        reservationSystemNeeded: false
       }
     ]);
   };
@@ -257,6 +261,21 @@ const EditPackages: React.FC = () => {
                 value={pkg.pricing}
                 onChange={(e) => handlePackageChange(packageIndex, 'pricing', e.target.value)}
                 className="font-body rounded-md mt-2"
+              />
+            </div>
+            
+            <div className="mb-3 flex items-center gap-2">
+              <label className="font-body text-[16px]">Reservation System Needed?</label>
+              <Switch 
+                checked={pkg.reservationSystemNeeded}
+                onCheckedChange={(checked) => {
+                  const updatedPackages = [...packages];
+                  updatedPackages[packageIndex] = {
+                    ...updatedPackages[packageIndex],
+                    reservationSystemNeeded: checked
+                  };
+                  setPackages(updatedPackages);
+                }}
               />
             </div>
             

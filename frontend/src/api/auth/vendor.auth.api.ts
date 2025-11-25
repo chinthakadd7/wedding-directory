@@ -7,6 +7,8 @@ export const loginVendor = async (email: string, password: string) => {
       email,
       password,
       
+    },{
+      withCredentials: true, // Include cookies in every request
     });
 
     return response.data;
