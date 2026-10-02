@@ -8,6 +8,7 @@ import { VendorAuthProvider } from "@/contexts/VendorAuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Toaster } from "react-hot-toast";
 import ScrollToTop from "@/components/shared/ScrollToTop";
+import LeafletGlobalGuard from "@/components/shared/LeafletGlobalGuard";
 import GoogleAuthProviderWrapper from "@/components/auth/GoogleAuthProviderWrapper";
 import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -247,6 +248,7 @@ export default function RootLayout({
                     {children}
                     <Toaster reverseOrder={false} />
                     <ScrollToTop />
+                    <LeafletGlobalGuard />
                   </PageTransition>
                 </ThemeProvider>
               </VendorAuthProvider>

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FiMapPin, FiSearch, FiCrosshair, FiX, FiCheck, FiLoader } from 'react-icons/fi';
 import cities from '@/utils/city.json';
+import { patchLeaflet } from '@/lib/leafletGuard';
 
 export interface LocationResult {
   address: string;
@@ -52,110 +53,155 @@ const matchSriLankaDistrict = (rawName?: string): string => {
   return '';
 };
 
-// Dynamic Leaflet Map Component (Client-only)
+// Dynamic Leaflet Map Component (Client-only with robust lifecycle and cleanup management)
 const LeafletMapPicker = dynamic(
   () =>
-    import('react-leaflet').then((mod) => {
-      const { MapContainer, TileLayer, Marker, useMapEvents, useMap } = mod;
+    Promise.resolve(function DynamicLeafletPicker({
+      position,
+      onPositionChange,
+    }: {
+      position: [number, number];
+      onPositionChange: (pos: [number, number]) => void;
+    }) {
+      const containerRef = useRef<HTMLDivElement>(null);
+      const mapRef = useRef<any>(null);
+      const markerRef = useRef<any>(null);
+      const onPositionChangeRef = useRef(onPositionChange);
+      const [isLoaded, setIsLoaded] = useState(false);
 
-      // Controller component that programmatically animates/pans map camera when position prop changes
-      function MapViewController({ pos }: { pos: [number, number] }) {
-        const map = useMap();
-        useEffect(() => {
-          if (pos && typeof pos[0] === 'number' && typeof pos[1] === 'number' && !isNaN(pos[0]) && !isNaN(pos[1])) {
-            map.flyTo(pos, 15, { animate: true, duration: 1.2 });
+      useEffect(() => {
+        onPositionChangeRef.current = onPositionChange;
+      }, [onPositionChange]);
+
+      // Initialize map once on mount
+      useEffect(() => {
+        let isMounted = true;
+
+        import('leaflet').then((L) => {
+          if (!isMounted || !containerRef.current) return;
+
+          patchLeaflet(L.default || L);
+
+          // If map instance already exists, safely remove it
+          if (mapRef.current) {
+            mapRef.current.remove();
+            mapRef.current = null;
           }
-        }, [pos, map]);
-        return null;
-      }
 
-      return function InnerMap({
-        position,
-        onPositionChange,
-      }: {
-        position: [number, number];
-        onPositionChange: (pos: [number, number]) => void;
-      }) {
-        const [icon, setIcon] = useState<any>(null);
+          // Clean up any stale leaflet ID left on the DOM element (Strict Mode / Fast Refresh)
+          if ((containerRef.current as any)._leaflet_id != null) {
+            (containerRef.current as any)._leaflet_id = null;
+          }
 
-        useEffect(() => {
-          import('leaflet').then((L) => {
-            // Custom Orange Marker Pin for Say I Do
-            const customIcon = L.divIcon({
-              className: 'custom-map-marker',
-              html: `
+          const map = L.map(containerRef.current, {
+            center: position,
+            zoom: 13,
+            scrollWheelZoom: true,
+          });
+
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          }).addTo(map);
+
+          // Custom Orange Marker Pin for Say I Do
+          const customIcon = L.divIcon({
+            className: 'custom-map-marker',
+            html: `
+              <div style="
+                position: relative;
+                width: 34px;
+                height: 34px;
+                background-color: #f97316;
+                border: 3px solid #ffffff;
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">
                 <div style="
-                  position: relative;
-                  width: 34px;
-                  height: 34px;
-                  background-color: #f97316;
-                  border: 3px solid #ffffff;
-                  border-radius: 50% 50% 50% 0;
-                  transform: rotate(-45deg);
-                  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                ">
-                  <div style="
-                    width: 12px;
-                    height: 12px;
-                    background-color: #ffffff;
-                    border-radius: 50%;
-                    transform: rotate(45deg);
-                  "></div>
-                </div>
-              `,
-              iconSize: [34, 34],
-              iconAnchor: [17, 34],
-            });
-            setIcon(customIcon);
+                  width: 12px;
+                  height: 12px;
+                  background-color: #ffffff;
+                  border-radius: 50%;
+                  transform: rotate(45deg);
+                "></div>
+              </div>
+            `,
+            iconSize: [34, 34],
+            iconAnchor: [17, 34],
           });
-        }, []);
 
-        // Listen for map clicks to move the pin
-        function MapClickHandler() {
-          useMapEvents({
-            click(e) {
-              onPositionChange([e.latlng.lat, e.latlng.lng]);
-            },
+          const marker = L.marker(position, {
+            icon: customIcon,
+            draggable: true,
+          }).addTo(map);
+
+          marker.on('dragend', (e: any) => {
+            const latlng = e.target.getLatLng();
+            onPositionChangeRef.current([latlng.lat, latlng.lng]);
           });
-          return null;
-        }
 
-        if (!icon) {
-          return <Skeleton className="w-full h-full min-h-[380px] rounded-xl" />;
-        }
+          map.on('click', (e: any) => {
+            onPositionChangeRef.current([e.latlng.lat, e.latlng.lng]);
+          });
 
-        return (
-          <MapContainer
-            center={position}
-            zoom={13}
-            scrollWheelZoom={true}
+          mapRef.current = map;
+          markerRef.current = marker;
+          setIsLoaded(true);
+
+          // Invalidate size to ensure proper rendering inside modal
+          setTimeout(() => {
+            if (mapRef.current) {
+              mapRef.current.invalidateSize();
+            }
+          }, 200);
+        });
+
+        return () => {
+          isMounted = false;
+          if (mapRef.current) {
+            mapRef.current.remove();
+            mapRef.current = null;
+          }
+          markerRef.current = null;
+          if (containerRef.current && (containerRef.current as any)._leaflet_id != null) {
+            (containerRef.current as any)._leaflet_id = null;
+          }
+        };
+      }, []); // Mount effect
+
+      // Update marker position & fly map camera smoothly when position changes
+      const prevPosRef = useRef<[number, number]>(position);
+      useEffect(() => {
+        if (!mapRef.current || !markerRef.current) return;
+        if (!position || typeof position[0] !== 'number' || typeof position[1] !== 'number' || isNaN(position[0]) || isNaN(position[1])) return;
+
+        const [prevLat, prevLng] = prevPosRef.current;
+        const [currLat, currLng] = position;
+
+        // If coordinates changed, update marker and fly camera
+        if (prevLat !== currLat || prevLng !== currLng) {
+          prevPosRef.current = position;
+          markerRef.current.setLatLng(position);
+          mapRef.current.flyTo(position, 15, { animate: true, duration: 1.2 });
+        }
+      }, [position]);
+
+      return (
+        <div className="relative w-full h-full min-h-[380px]">
+          <div
+            ref={containerRef}
             style={{ width: '100%', height: '100%', minHeight: '380px', zIndex: 0 }}
-            className="z-0"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Marker
-              key={`${position[0]}-${position[1]}`}
-              position={position}
-              icon={icon}
-              draggable={true}
-              eventHandlers={{
-                dragend: (e: any) => {
-                  const latlng = e.target.getLatLng();
-                  onPositionChange([latlng.lat, latlng.lng]);
-                },
-              }}
-            />
-            <MapClickHandler />
-            <MapViewController pos={position} />
-          </MapContainer>
-        );
-      };
+            className="z-0 w-full h-full"
+          />
+          {!isLoaded && (
+            <Skeleton className="absolute inset-0 w-full h-full min-h-[380px] rounded-xl z-10" />
+          )}
+        </div>
+      );
     }),
   {
     ssr: false,

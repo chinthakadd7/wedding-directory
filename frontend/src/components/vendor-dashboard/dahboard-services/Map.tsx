@@ -7,6 +7,7 @@ import { useQuery } from "@apollo/client";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { FiMapPin, FiExternalLink } from "react-icons/fi";
+import { patchLeaflet } from "@/lib/leafletGuard";
 
 // Dynamic Leaflet map component with robust lifecycle and cleanup management
 const LeafletMap = dynamic(
@@ -30,6 +31,8 @@ const LeafletMap = dynamic(
 
         import("leaflet").then((L) => {
           if (!isMounted || !containerRef.current) return;
+
+          patchLeaflet(L.default || L);
 
           // If map instance already exists, safely remove it
           if (mapInstanceRef.current) {
