@@ -24,8 +24,9 @@ const VendorHeader = () => {
     pathname.startsWith("/vendor-onboarding") ||
     pathname === "/sign-up" ||
     pathname === "/vendor-signup";
-  const [showProfileMenu, setShowProfileMenu] = useState(false); // State for the profile dropdown
-  const [showNotificationMenu, setShowNotificationMenu] = useState(false); // State for notifications dropdown
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotificationMenu, setShowNotificationMenu] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
   const previousCountRef = useRef<number | null>(null);
@@ -173,10 +174,27 @@ const VendorHeader = () => {
     };
   }, [showProfileMenu, showNotificationMenu]);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isMobileMenuOpen]);
+
   return (
     <Fragment>
-      <header className="sticky top-0 z-30 py-3.5 xl:py-4 text-black dark:text-white bg-lightYellow/95 dark:bg-darkBg/95 backdrop-blur-md border-b border-orange/15 dark:border-orange/20 transition-all duration-200 shadow-xs">
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 sm:px-6 lg:px-8 w-full gap-4">
+      <header className="sticky top-0 z-30 py-3 xl:py-4 text-black dark:text-white bg-lightYellow/95 dark:bg-darkBg/95 backdrop-blur-md border-b border-orange/15 dark:border-orange/20 transition-all duration-200 shadow-xs">
+        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 sm:px-6 lg:px-8 w-full gap-2">
+          {/* Mobile hamburger button */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="md:hidden p-2 -ml-1 rounded-xl text-gray-700 dark:text-zinc-300 hover:bg-orange/10 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center"
+            aria-label="Open navigation menu"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
           {/* Left section: Logo - click disabled for logged-in vendor */}
           <div className="flex items-start justify-start select-none cursor-default shrink-0">
             <div>
@@ -187,7 +205,7 @@ const VendorHeader = () => {
             </div>
           </div>
 
-          {/* Center section: Navigation */}
+          {/* Center section: Navigation - desktop only */}
           <nav className="hidden md:flex justify-center items-center gap-1 lg:gap-2 font-title">
             {navLinks.map((link) => {
               const active = link.isActive(pathname);
@@ -423,6 +441,78 @@ const VendorHeader = () => {
           </div>
         </div>
       </header>
+
+      {/* Mobile slide-in drawer */}
+      <div className={`md:hidden ${isMobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
+        <div
+          className={`fixed inset-0 bg-black z-40 transition-all duration-300 ${isMobileMenuOpen ? "opacity-40" : "opacity-0"}`}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+        <div
+          className="fixed inset-y-0 left-0 w-4/5 max-w-xs bg-white dark:bg-darkSurface border-r border-gray-100 dark:border-zinc-800 shadow-2xl z-50 transition-transform duration-300 ease-in-out flex flex-col"
+          style={{ transform: isMobileMenuOpen ? "translateX(0)" : "translateX(-100%)" }}
+        >
+          {/* Drawer header */}
+          <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-zinc-800 shrink-0">
+            <div>
+              <p className="font-title text-base font-bold text-gray-900 dark:text-zinc-100">Say I Do</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-orange">Vendors</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2 rounded-xl text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+              aria-label="Close menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          {/* Nav links */}
+          <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+            {navLinks.map((link) => {
+              const active = link.isActive(pathname);
+              return (
+                <Link
+                  key={link.name}
+                  href={isSignupForm ? "#" : link.href}
+                  onClick={() => !isSignupForm && setIsMobileMenuOpen(false)}
+                  className={`flex items-center px-4 py-3.5 rounded-xl font-title text-sm font-semibold transition-all ${
+                    active
+                      ? "bg-orange text-white"
+                      : isSignupForm
+                        ? "text-gray-400 dark:text-zinc-600 cursor-not-allowed"
+                        : "text-gray-700 dark:text-zinc-300 hover:bg-orange/10 hover:text-orange dark:hover:bg-zinc-800 dark:hover:text-orange"
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Drawer footer */}
+          <div className="px-3 py-4 border-t border-gray-100 dark:border-zinc-800 space-y-1 shrink-0">
+            <div className="flex items-center justify-between px-4 py-2.5 rounded-xl">
+              <span className="font-title text-sm font-semibold text-gray-700 dark:text-zinc-300">Dark Mode</span>
+              <button type="button" onClick={toggleTheme} className="p-2 rounded-xl text-gray-700 dark:text-zinc-300 hover:bg-orange/10 dark:hover:bg-zinc-800 transition-colors" aria-label="Toggle theme">
+                <FiSun className="hidden dark:block w-5 h-5 text-amber-400" />
+                <FiMoon className="block dark:hidden w-5 h-5" />
+              </button>
+            </div>
+            {!isSignupForm && (
+              <Link href="/vendor-dashboard/settings" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 dark:text-zinc-200 hover:bg-orange/5 dark:hover:bg-orange/15 transition-all">
+                <FiSettings size={15} className="text-orange" />
+                <span className="font-title text-sm font-semibold">Settings</span>
+              </Link>
+            )}
+            <button type="button" onClick={() => { logout(); setIsMobileMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-all text-left">
+              <FiLogOut size={15} />
+              <span className="font-title text-sm font-semibold">Logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </Fragment>
   );
 };

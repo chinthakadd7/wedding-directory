@@ -30,7 +30,7 @@ const VendorWidget: React.FC<VendorWidgetProps> = ({ vendors, visitorId }) => {
   return (
     <div className="bg-white dark:bg-darkSurface rounded-2xl border border-orange/20 shadow-sm hover:shadow-md hover:border-orange/30 transition-all duration-300 overflow-hidden flex flex-col justify-between h-full">
       {/* Header */}
-      <div className="px-5 sm:px-6 py-4 border-b border-orange/15 dark:border-orange/20 bg-orange/[0.02] dark:bg-orange/[0.04] flex items-center justify-between">
+      <div className="px-4 md:px-5 lg:px-6 py-3.5 lg:py-4 border-b border-orange/15 dark:border-orange/20 bg-orange/[0.02] dark:bg-orange/[0.04] flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange/10 dark:bg-orange/20 text-orange flex items-center justify-center shrink-0 border border-orange/15 dark:border-orange/30 shadow-xs">
             <FiBookmark className="h-5 w-5" />
@@ -42,7 +42,7 @@ const VendorWidget: React.FC<VendorWidgetProps> = ({ vendors, visitorId }) => {
       </div>
 
       {/* Body */}
-      <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between gap-4">
+      <div className="p-4 md:p-5 lg:p-6 flex-1 flex flex-col justify-between gap-4">
         <div>
           <p className="text-xs sm:text-sm text-gray-500 dark:text-zinc-400 mb-3.5 font-body">
             Track and compare your shortlisted wedding services.

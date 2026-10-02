@@ -17,17 +17,17 @@ const Subscribe = () => {
             Showcase your packages, receive verified couple inquiries, and manage bookings effortlessly across Sri Lanka.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
+        <div className="flex flex-col xs:flex-row items-center gap-3 shrink-0 w-full xs:w-auto">
           <Link
             href="/vendor-signup"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-orange hover:bg-orange/90 active:scale-[0.98] text-white font-title text-base sm:text-lg font-semibold shadow-md transition-all"
+            className="w-full xs:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-orange hover:bg-orange/90 active:scale-[0.98] text-white font-title text-base sm:text-lg font-semibold shadow-md transition-all"
           >
             <span>Join as a Vendor</span>
             <FiArrowRight size={16} />
           </Link>
           <Link
             href="/vendor-login"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3 rounded-xl border border-white/25 hover:border-white text-white hover:bg-white/10 font-title text-base font-medium transition-all"
+            className="w-full xs:w-auto inline-flex items-center justify-center px-5 py-3.5 rounded-xl border border-white/25 hover:border-white text-white hover:bg-white/10 font-title text-base font-medium transition-all"
           >
             Vendor Login
           </Link>

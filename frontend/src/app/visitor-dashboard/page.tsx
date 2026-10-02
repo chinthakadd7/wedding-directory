@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/VisitorAuthContext";
 import VisitorCoupleBanner from "@/components/visitor-dashboard/VisitorCoupleBanner";
 import VisitorBookingCalendar from "@/components/visitor-dashboard/VisitorBookingCalendar";
 import DashboardWidgets from "@/components/visitor-dashboard/DashBoardWidgets";
-import BottomNavigationBar from "@/components/visitor-dashboard/BottomNavigationBar";
 import { VisitorDashboardSkeleton } from "@/components/ui/shimmer";
 import { StaticImageData } from "next/image";
 import {
@@ -193,11 +192,11 @@ const VisitorDashboardContent: React.FC = () => {
     <div className="min-h-screen bg-lightYellow dark:bg-darkBg flex flex-col font-body transition-colors duration-200">
       <VisitorHeader />
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+      <main className="flex-grow max-w-7xl mx-auto px-3 sm:px-5 lg:px-8 py-5 sm:py-6 lg:py-8 w-full">
         {/* Top Header Banner matching Vendor Dashboard */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-6 lg:mb-8">
           <div>
-            <h1 className="font-title text-3xl font-bold text-gray-900 dark:text-zinc-100">
+            <h1 className="font-title text-2xl sm:text-3xl font-bold text-gray-900 dark:text-zinc-100">
               Wedding Dashboard
             </h1>
             <p className="text-gray-500 dark:text-zinc-400 font-body text-sm mt-1">
@@ -208,7 +207,7 @@ const VisitorDashboardContent: React.FC = () => {
           <div className="flex items-center gap-2.5 self-start sm:self-auto">
             <Link
               href="/services"
-              className="inline-flex items-center justify-center gap-2 bg-orange hover:bg-orange/90 text-white font-semibold px-4 py-2.5 rounded-xl transition-all shadow-sm text-xs"
+              className="inline-flex items-center justify-center gap-2 bg-orange hover:bg-orange/90 text-white font-semibold px-3.5 sm:px-4 py-2.5 rounded-xl transition-all shadow-sm text-xs w-full sm:w-auto"
             >
               <FiSearch size={15} />
               <span>Explore Services</span>
@@ -217,7 +216,7 @@ const VisitorDashboardContent: React.FC = () => {
         </div>
 
         {/* Asymmetric Profile Hub + Booking Calendar Layout (4 cols + 8 cols) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 mb-10 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 lg:gap-8 mb-8 lg:mb-10 items-stretch min-w-0">
           {/* Left Column (4 cols): Couple Profile & Integrated Planning Hub */}
           <div className="lg:col-span-4 flex flex-col">
             <VisitorCoupleBanner
@@ -234,7 +233,7 @@ const VisitorDashboardContent: React.FC = () => {
           </div>
 
           {/* Right Column (8 cols): Planning Overview or Booking Calendar */}
-          <div className="lg:col-span-8 flex flex-col h-full">
+          <div className="lg:col-span-8 flex flex-col h-full min-w-0">
             {/* Tab 1: Planning Overview */}
             {dashboardTab === "overview" && (
               <div className="h-full flex flex-col flex-1">
@@ -259,7 +258,7 @@ const VisitorDashboardContent: React.FC = () => {
             {/* Tab 2: Booking Calendar */}
             {dashboardTab === "calendar" && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between bg-white dark:bg-darkSurface rounded-2xl border border-orange/20 dark:border-zinc-800 px-5 py-3 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-darkSurface rounded-2xl border border-orange/20 dark:border-zinc-800 px-4 sm:px-5 py-3 shadow-xs">
                   <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-100 font-title">
                     <FiCalendar className="text-orange" size={18} />
                     <span>Booking Calendar</span>
@@ -284,7 +283,6 @@ const VisitorDashboardContent: React.FC = () => {
         </div>
       </main>
 
-      <BottomNavigationBar />
       <Footer />
     </div>
   );

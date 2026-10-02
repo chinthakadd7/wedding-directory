@@ -22,6 +22,9 @@ const config = {
       },
     },
     extend: {
+      screens: {
+        xs: "480px",
+      },
       colors: {
         primary: "#F1B4B4",
         secondary: "#FFDCDC",

@@ -134,7 +134,7 @@ const VisitorBookingCalendar: React.FC<VisitorBookingCalendarProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-darkSurface rounded-2xl shadow-sm border border-orange/20 dark:border-zinc-800 p-6 sm:p-7 flex flex-col h-full space-y-6 animate-fade-in">
+      <div className="bg-white dark:bg-darkSurface rounded-2xl shadow-sm border border-orange/20 dark:border-zinc-800 p-4 sm:p-5 lg:p-7 flex flex-col h-full space-y-5 lg:space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-gray-100 dark:border-zinc-800">
           <div className="space-y-1.5">
             <Skeleton className="h-6 w-44 rounded-lg" />
@@ -180,7 +180,7 @@ const VisitorBookingCalendar: React.FC<VisitorBookingCalendarProps> = ({
   }
 
   return (
-    <div className="bg-white dark:bg-darkSurface rounded-2xl shadow-sm border border-orange/20 p-6 sm:p-7 flex flex-col h-full">
+    <div className="bg-white dark:bg-darkSurface rounded-2xl shadow-sm border border-orange/20 p-4 sm:p-5 lg:p-7 flex flex-col h-full min-w-0">
       {/* Top Header & Legend matching vendor calendar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 pb-4 border-b border-gray-100 dark:border-zinc-800">
         <div>
@@ -231,7 +231,7 @@ const VisitorBookingCalendar: React.FC<VisitorBookingCalendarProps> = ({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1.5 mb-6">
+      <div className="grid grid-cols-7 gap-1 mb-5 sm:gap-1.5 sm:mb-6">
         {/* Day Header Row */}
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div

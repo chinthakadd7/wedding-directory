@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { AuthProvider as VisitorAuthProvider } from "@/contexts/VisitorAuthContext";
 import ApolloWrapper from "@/apollo/ApolloWrapper";
 import "./globals.css";
@@ -136,6 +136,18 @@ const marckScriptFont = localFont({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover", // supports safe area insets for notched phones
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFEFEB" },
+    { media: "(prefers-color-scheme: dark)", color: "#141211" },
+  ],
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://sayido.lk"),
   title: {
@@ -158,9 +170,17 @@ export const metadata: Metadata = {
   publisher: "Say I Do",
   icons: {
     icon: "/favicon.ico",
+    apple: "/favicon.ico",
   },
   verification: {
     google: "LzToS2ShoWRSCnzqc98_lGewVgkZIN-LHglx_5QpS6M",
+  },
+  // Mobile browser UI color
+  other: {
+    "theme-color": "#FFEFEB",
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
   },
   openGraph: {
     type: "website",

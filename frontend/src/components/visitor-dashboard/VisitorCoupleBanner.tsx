@@ -153,7 +153,7 @@ const VisitorCoupleBanner: React.FC<VisitorCoupleBannerProps> = ({
   ];
 
   return (
-    <div className="w-full h-full bg-white dark:bg-darkSurface rounded-2xl shadow-sm border border-orange/20 p-6 sm:p-7 flex flex-col items-center text-center transition-colors duration-200">
+    <div className="w-full h-full bg-white dark:bg-darkSurface rounded-2xl shadow-sm border border-orange/20 p-4 sm:p-5 lg:p-7 flex flex-col items-center text-center transition-colors duration-200">
       {/* Couple Photo Upload Card */}
       <div className="w-full flex justify-center mb-5">
         <ProfilePicture profilePic={profilePic} setProfilePic={setProfilePic} />
@@ -166,7 +166,7 @@ const VisitorCoupleBanner: React.FC<VisitorCoupleBannerProps> = ({
             <span className="text-[11px] font-semibold text-orange uppercase tracking-wider block mb-1">
               The Marriage Of
             </span>
-            <h2 className="font-marck text-3xl sm:text-4xl text-gray-900 dark:text-zinc-100 leading-tight">
+            <h2 className="font-marck text-2xl sm:text-3xl lg:text-4xl text-gray-900 dark:text-zinc-100 leading-tight">
               {userFname}
               <span className="text-orange font-title text-2xl mx-2 font-normal">&</span>
               {partnerFname}
@@ -177,7 +177,7 @@ const VisitorCoupleBanner: React.FC<VisitorCoupleBannerProps> = ({
             <span className="text-[11px] font-semibold text-orange uppercase tracking-wider block mb-1">
               Wedding Planning
             </span>
-            <h2 className="font-marck text-3xl sm:text-4xl text-gray-900 dark:text-zinc-100 leading-tight">
+            <h2 className="font-marck text-2xl sm:text-3xl lg:text-4xl text-gray-900 dark:text-zinc-100 leading-tight">
               {userFname ? `${userFname}'s Wedding` : "Our Wedding"}
             </h2>
             <Link
@@ -247,7 +247,7 @@ const VisitorCoupleBanner: React.FC<VisitorCoupleBannerProps> = ({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`group flex items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all ${
+                  className={`group flex items-center justify-between p-2.5 lg:p-3 rounded-xl border transition-all ${
                   isActive
                     ? "bg-orange text-white border-orange shadow-sm"
                     : "border-gray-100 dark:border-zinc-800 hover:border-orange/30 hover:bg-orange/5 dark:hover:bg-zinc-800/60 text-gray-700 dark:text-zinc-300 hover:text-orange"

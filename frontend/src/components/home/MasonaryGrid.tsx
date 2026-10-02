@@ -67,7 +67,7 @@ const MasonaryGrid = () => {
       </div>
 
       <div className="max-w-7xl mx-auto w-full">
-        <div className="columns-2 lg:columns-3 gap-3 sm:gap-4 space-y-3 sm:space-y-4">
+        <div className="columns-1 xs:columns-2 sm:columns-2 lg:columns-3 gap-3 sm:gap-4 space-y-3 sm:space-y-4">
           {photos.map((photo) => (
             <div
               key={photo.id}
@@ -83,12 +83,12 @@ const MasonaryGrid = () => {
                 />
 
                 {/* Mobile Persistent Badge (Touchscreens lack hover) */}
-                <div className="sm:hidden absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-xs px-2.5 py-1.5 rounded-xl border border-white/15 text-white flex items-center justify-between">
-                  <span className="font-title font-semibold text-xs truncate">
+                <div className="sm:hidden absolute bottom-2 left-2 right-2 bg-black/65 backdrop-blur-sm px-3 py-2 rounded-xl border border-white/15 text-white flex items-center justify-between">
+                  <span className="font-title font-semibold text-sm truncate">
                     {photo.alt}
                   </span>
-                  <span className="text-[10px] text-orange font-bold uppercase tracking-wider shrink-0 ml-1">
-                    Explore
+                  <span className="text-xs text-orange font-bold uppercase tracking-wider shrink-0 ml-2">
+                    Explore →
                   </span>
                 </div>
 

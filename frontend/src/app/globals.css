@@ -2,7 +2,53 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ===== Mobile UX Improvements ===== */
+html {
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  /* Prevent horizontal overflow on mobile */
+  overflow-x: hidden;
+}
+
+body {
+  /* Prevent content jumping on mobile browsers with URL bars */
+  min-height: 100dvh;
+  overflow-x: hidden;
+  /* iOS momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent auto-zoom on input focus on iOS (needs font-size >= 16px) */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure touch targets are at least 44x44px */
+button,
+a,
+[role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Override min-height for icon-only small inline elements */
+.touch-compact {
+  min-height: unset;
+  min-width: unset;
+}
+
 @layer base {
+
   :root {
     color-scheme: light;
     --sidebar-background: 0 0% 98%;
@@ -103,14 +149,16 @@ select:-webkit-autofill:focus {
   background: rgba(252, 123, 84, 0.8);
 }
 
-/* Firefox standard scrollbar properties */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
-}
+/* Firefox standard scrollbar properties - desktop only */
+@media (min-width: 768px) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+  }
 
-.dark * {
-  scrollbar-color: rgba(113, 113, 122, 0.45) transparent;
+  .dark * {
+    scrollbar-color: rgba(113, 113, 122, 0.45) transparent;
+  }
 }
 
 @media print {
