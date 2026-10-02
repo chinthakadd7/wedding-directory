@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import BottomNavigationBar from '@/components/visitor-dashboard/BottomNavigationBar';
 import { useAuth } from '@/contexts/VisitorAuthContext';
 import { getVendorRecommendations } from '@/api/recommendation/vendorRecommendation.api';
 import categories from '@/utils/category.json';
-import CityInput from '@/components/vendor-search/CityInput';
+import cities from '@/utils/city.json';
 import { Sparkles } from 'lucide-react';
 import {
   FiMapPin,
@@ -22,9 +22,10 @@ import RecommendedPackageCard, {
 } from '@/components/visitor-dashboard/RecommendedPackageCard';
 
 const categoryOptions = categories;
+const districtOptions = [...new Set(cities.map((city) => city.District))].sort();
 
 const RecommendationPage = () => {
-  const { accessToken, isAuthenticated } = useAuth();
+  const { accessToken, isAuthenticated, isInitialized } = useAuth();
   const [location, setLocation] = useState('');
   const [budget, setBudget] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -32,13 +33,52 @@ const RecommendationPage = () => {
   const [error, setError] = useState('');
   const [source, setSource] = useState<'rules' | 'ai' | 'ai+rules' | null>(null);
   const [recommendations, setRecommendations] = useState<RecommendedPackageItem[]>([]);
+  const selectedCategoriesRef = useRef<string[]>([]);
 
   const canRequest = useMemo(() => isAuthenticated && !!accessToken, [isAuthenticated, accessToken]);
 
-  const toggleCategory = (category: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((item) => item !== category) : [...prev, category],
+  if (!isInitialized) {
+    return (
+      <div className="w-full max-w-lg mx-auto py-16">
+        <div className="bg-white dark:bg-darkSurface rounded-3xl border-2 border-orange/20 dark:border-zinc-800 shadow-sm p-8 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-orange/10 dark:bg-orange/20 flex items-center justify-center text-orange mx-auto">
+            <Sparkles size={28} />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold font-title text-gray-900 dark:text-zinc-100">
+            Loading your dashboard...
+          </h1>
+        </div>
+      </div>
     );
+  }
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories((prev) => {
+      const next = prev.includes(category)
+        ? prev.filter((item) => item !== category)
+        : [...prev, category];
+
+      selectedCategoriesRef.current = next;
+      return next;
+    });
+  };
+
+  const buildRecommendationPayload = () => {
+    const normalizedLocation = location?.trim() || undefined;
+    const normalizedBudget = budget && Number(budget) > 0 ? Number(budget) : undefined;
+    const activeCategories = selectedCategoriesRef.current.length > 0
+      ? selectedCategoriesRef.current
+      : selectedCategories;
+    const normalizedCategories = activeCategories
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return {
+      location: normalizedLocation,
+      budget: normalizedBudget,
+      categories: normalizedCategories,
+      limit: 6,
+    };
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -49,19 +89,20 @@ const RecommendationPage = () => {
       return;
     }
 
+    const payload = buildRecommendationPayload();
+    const { location: normalizedLocation, budget: normalizedBudget, categories: normalizedCategories } = payload;
+    selectedCategoriesRef.current = normalizedCategories;
+
+    if (!normalizedLocation && !normalizedBudget && normalizedCategories.length === 0) {
+      setError('Please select a location, budget, or at least one service category before requesting recommendations.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
     try {
-      const response = await getVendorRecommendations(
-        {
-          location,
-          budget: budget ? Number(budget) : undefined,
-          categories: selectedCategories,
-          limit: 9,
-        },
-        accessToken,
-      );
+      const response = await getVendorRecommendations(payload, accessToken);
 
       setRecommendations(response.recommendations || []);
       setSource(response.source || 'rules');
@@ -144,12 +185,18 @@ const RecommendationPage = () => {
               <FiMapPin className="text-orange" size={14} />
               <span>Preferred Location</span>
             </label>
-            <CityInput
+            <select
               value={location}
-              onCityChange={(selectedCity) => setLocation(selectedCity)}
-              placeholder="Select District"
-              className="flex justify-between items-center w-full h-11 border border-orange/25 dark:border-zinc-700 bg-white dark:bg-darkElevated text-gray-900 dark:text-zinc-100 rounded-xl px-4 text-sm font-body hover:border-orange/60 focus:border-orange focus:ring-2 focus:ring-orange/20 focus:outline-none transition-all cursor-pointer"
-            />
+              onChange={(event) => setLocation(event.target.value)}
+              className="w-full h-11 border border-orange/25 dark:border-zinc-700 bg-white dark:bg-darkElevated text-gray-900 dark:text-zinc-100 rounded-xl px-4 text-sm font-body hover:border-orange/60 focus:border-orange focus:ring-2 focus:ring-orange/20 focus:outline-none transition-all cursor-pointer"
+            >
+              <option value="">Select District</option>
+              {districtOptions.map((district) => (
+                <option key={district} value={district}>
+                  {district}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2 font-body flex items-center gap-1.5">

@@ -9,11 +9,19 @@ export type VendorRecommendationRequest = {
 
 export const getVendorRecommendations = async (
   payload: VendorRecommendationRequest,
-  accessToken: string,
+  accessToken?: string | null,
 ) => {
+  const token = accessToken ||
+    (typeof document !== 'undefined'
+      ? document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('access_token='))
+          ?.split('=')[1]
+      : undefined);
+
   const response = await request.post('/recommendations/vendors', payload, {
     headers: {
-      Authorization: `Bearer ${accessToken}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     withCredentials: true,
   });
