@@ -22,6 +22,14 @@ export class VendorResolver {
   }
 
   @Query(() => VendorModel, { nullable: true })
+  async findVendorByEmail(
+    @Args('email', { type: () => String }) email: string,
+  ): Promise<VendorEntity | null> {
+    const vendor = await this.vendorService.getVendorByEmail(email);
+    return vendor || null;
+  }
+
+  @Query(() => VendorModel, { nullable: true })
   async findVendorBySlug(
     @Args('slug', { type: () => String }) slug: string,
   ): Promise<VendorEntity | null> {
