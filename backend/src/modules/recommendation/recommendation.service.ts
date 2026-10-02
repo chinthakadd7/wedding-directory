@@ -48,8 +48,14 @@ export class RecommendationService {
 
   async recommendForVisitor(input: RecommendationRequestDto) {
     const normalized = this.normalizeInput(input);
+    this.logger.debug('Recommendation request payload received', {
+      raw: input,
+      normalized,
+    });
+
     const services = await this.findCandidateServices(normalized);
     const aiEnabled = Boolean(this.configService.get<string>('GROQ_API_KEY'));
+    const useAi = aiEnabled;
 
     if (services.length === 0) {
       return {
@@ -81,9 +87,18 @@ export class RecommendationService {
       .sort((left, right) => right.deterministicScore - left.deterministicScore)
       .slice(0, Math.min(12, Math.max(normalized.limit, normalized.limit + 2)));
 
-    const aiResult = await this.rankWithGroq(deterministicRanked, normalized);
-    const aiRanked = aiResult.ranked;
-    const finalList = (aiRanked || deterministicRanked).slice(0, normalized.limit);
+    const aiResult = useAi ? await this.rankWithGroq(deterministicRanked, normalized) : { ranked: null, reason: 'ai_disabled' };
+    const aiRanked = useAi ? aiResult.ranked : null;
+    const allowedServiceIds = new Set(
+      deterministicRanked.map((item) => item.serviceId),
+    );
+    const aiSafePool = (aiRanked || deterministicRanked).filter((item) =>
+      allowedServiceIds.has(item.serviceId),
+    );
+    const finalList = this.enforceFinalCandidateFilters(
+      aiSafePool,
+      normalized,
+    ).slice(0, normalized.limit);
 
     return {
       source: aiRanked ? 'ai' : 'rules',
@@ -134,33 +149,31 @@ export class RecommendationService {
       .leftJoinAndSelect('pkg.packageFeatures', 'pkgFeature')
       .where('service.visible = :visible', { visible: true });
 
-    if (input.location) {
-      query.andWhere(
-        '(LOWER(vendor.city) LIKE :location OR LOWER(vendor.location) LIKE :location)',
-        {
-          location: `%${input.location}%`,
-        },
-      );
-    }
-
     const services = await query.getMany();
 
-    // When categories are selected, strictly filter to only matching categories
+    const servicesAfterLocationFilter = input.location
+      ? services.filter((service) => this.matchesLocation(service, input.location))
+      : services;
+
     const servicesAfterCategoryFilter =
       input.categories.length > 0
-        ? services.filter((service) =>
+        ? servicesAfterLocationFilter.filter((service) =>
             this.matchesCategoryPreference(service.category || '', input.categories),
           )
-        : services;
+        : servicesAfterLocationFilter;
 
     if (!input.perCategoryBudget) {
       return servicesAfterCategoryFilter;
     }
 
     return servicesAfterCategoryFilter.filter((service) => {
-      const minPackagePrice = this.getMinVisiblePackagePrice(service.packages || []);
-      // Service must have at least one visible package within the per-category budget
-      return minPackagePrice !== null && minPackagePrice <= input.perCategoryBudget!;
+      const visiblePackages = (service.packages || []).filter((pkg) => pkg.visible !== false);
+      if (visiblePackages.length === 0) return false;
+
+      return visiblePackages.some((pkg) => {
+        const price = Number(pkg.pricing);
+        return Number.isFinite(price) && price > 0 && price <= input.perCategoryBudget!;
+      });
     });
   }
 
@@ -223,9 +236,15 @@ export class RecommendationService {
     input: { location: string; perCategoryBudget: number | null; categories: string[] },
   ): RankedVendor | null {
     const lowerCategory = (service.category || '').toLowerCase();
+    const city = this.getServiceCity(service);
 
     // When categories are selected, strictly exclude services that don't match
     if (input.categories.length > 0 && !this.matchesCategoryPreference(lowerCategory, input.categories)) {
+      return null;
+    }
+
+    // Keep the selected location strict so services outside the chosen city are never recommended.
+    if (input.location && !this.matchesLocation(service, input.location)) {
       return null;
     }
 
@@ -241,8 +260,7 @@ export class RecommendationService {
 
     const minPackagePrice = this.getMinVisiblePackagePrice(service.packages || []);
     const targetPrice = relevantPackage ? Number(relevantPackage.pricing) : minPackagePrice;
-    const city = service.vendor?.city || '';
-    const location = service.vendor?.city || '';
+    const location = city;
 
     let score = 0;
     const reasons: string[] = [];
@@ -313,6 +331,72 @@ export class RecommendationService {
     };
   }
 
+
+  private getServiceCity(service: Partial<ServiceEntity>) {
+    return (service.city || service.vendor?.city || '').trim();
+  }
+
+  private matchesLocation(service: Partial<ServiceEntity>, inputLocation: string) {
+    const cityName = (service.city || service.vendor?.city || '').trim().toLowerCase();
+    const locationName = (service.location || '').trim().toLowerCase();
+    const normalizedLocation = inputLocation.trim().toLowerCase();
+
+    if (!normalizedLocation) {
+      return true;
+    }
+
+    const cityMatches = cityName && (
+      cityName === normalizedLocation ||
+      cityName.includes(normalizedLocation) ||
+      normalizedLocation.includes(cityName)
+    );
+
+    const locationMatches = locationName && (
+      locationName === normalizedLocation ||
+      locationName.includes(normalizedLocation) ||
+      normalizedLocation.includes(locationName)
+    );
+
+    return Boolean(cityMatches || locationMatches);
+  }
+
+  private enforceFinalCandidateFilters(
+    candidates: RankedVendor[],
+    input: {
+      location: string;
+      perCategoryBudget: number | null;
+      categories: string[];
+    },
+  ) {
+    return candidates.filter((item) => {
+      if (input.location) {
+        const cityValue = (item.city || '').trim().toLowerCase();
+        const locationValue = (item.location || '').trim().toLowerCase();
+        const normalizedLocation = input.location.trim().toLowerCase();
+        const cityMatches = cityValue === normalizedLocation || cityValue.includes(normalizedLocation) || normalizedLocation.includes(cityValue);
+        const locationMatches = locationValue === normalizedLocation || locationValue.includes(normalizedLocation) || normalizedLocation.includes(locationValue);
+        if (!cityMatches && !locationMatches) {
+          return false;
+        }
+      }
+
+      if (input.categories.length > 0) {
+        const categoryMatch = this.matchesCategoryPreference(item.category || '', input.categories);
+        if (!categoryMatch) {
+          return false;
+        }
+      }
+
+      if (input.perCategoryBudget && input.perCategoryBudget > 0) {
+        const price = Number(item.packagePrice);
+        if (!Number.isFinite(price) || price <= 0 || price > input.perCategoryBudget) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
 
   private getMinVisiblePackagePrice(packages: PackageEntity[]) {
     const visiblePackages = packages.filter((pkg) => pkg.visible);
@@ -425,6 +509,9 @@ export class RecommendationService {
 
     const prompt = this.buildRankingPrompt(enrichedCandidates, input);
 
+    // Temporary debug logging: inspect exactly what the model receives.
+    this.logger.debug(`Recommendation prompt for ${input.location || 'all locations'} / ${input.categories.join(', ') || 'all categories'}: ${prompt.slice(0, 2000)}`);
+
     // Log configured endpoint and model for debugging (do not log the API key)
     this.logger.debug(`Groq endpoint configured: ${endpointUrl}`);
     this.logger.debug(`Groq model configured: ${configuredModel}`);
@@ -524,12 +611,11 @@ export class RecommendationService {
         return { ranked: null, reason: 'empty_groq_ranking' };
       }
 
-      const remaining = candidatesWithinBudget.filter(
-        (item) => !ranked.some((rankedItem) => rankedItem.serviceId === item.serviceId),
-      );
-
+      // Important: the model must only reorder the already-filtered candidate pool.
+      // Never append the remaining unranked candidates back into the final result,
+      // because that reintroduces services outside the selected city/category/budget.
       return {
-        ranked: [...ranked, ...remaining].slice(0, input.limit),
+        ranked: ranked.slice(0, input.limit),
         reason: `success:groq:${configuredModel}`,
       };
     } catch (error) {
