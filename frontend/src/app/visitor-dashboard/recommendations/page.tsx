@@ -3,7 +3,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Breadcrumbs from '@/components/Breadcrumbs';
-import BottomNavigationBar from '@/components/visitor-dashboard/BottomNavigationBar';
 import { useAuth } from '@/contexts/VisitorAuthContext';
 import { getVendorRecommendations } from '@/api/recommendation/vendorRecommendation.api';
 import categories from '@/utils/category.json';
@@ -319,7 +318,6 @@ const RecommendationPage = () => {
         )}
       </div>
 
-      <BottomNavigationBar />
     </div>
   );
 };
