@@ -4,7 +4,15 @@ import { Fragment, useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { BiMessageRounded } from "react-icons/bi";
-import { FiCalendar, FiUser, FiLogOut, FiSun, FiMoon } from "react-icons/fi";
+import {
+  FiCalendar,
+  FiUser,
+  FiLogOut,
+  FiSun,
+  FiMoon,
+  FiMenu,
+  FiX,
+} from "react-icons/fi";
 import Image from "next/image";
 import { useAuth } from "@/contexts/VisitorAuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -32,6 +40,7 @@ const VisitorHeader = () => {
   ); // Default placeholder
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotificationMenu, setShowNotificationMenu] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
   const previousApprovedCountRef = useRef<number | null>(null);
@@ -212,19 +221,39 @@ const VisitorHeader = () => {
 
   return (
     <Fragment>
-      <header className="sticky top-0 z-30 py-3.5 xl:py-4 text-black dark:text-white bg-lightYellow/95 dark:bg-darkBg/95 backdrop-blur-md border-b border-orange/15 dark:border-orange/20 transition-all duration-200 shadow-xs">
-        <div className="max-w-7xl mx-auto flex justify-between items-center px-4 sm:px-6 lg:px-8 w-full">
-          {/* Logo - click disabled for logged-in visitor */}
-          <div className="flex items-center select-none cursor-default">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 font-title">
-              Say I Do
-            </h1>
-          </div>
+      <header
+        className="sticky top-0 z-30 text-black dark:text-white backdrop-blur-md transition-colors duration-200"
+        style={{
+          background: "var(--sid-nav)",
+          borderBottom: "1px solid var(--sid-line)",
+        }}
+      >
+        <div className="max-w-[1540px] mx-auto flex min-h-[76px] items-center gap-4 px-4 sm:px-8 lg:px-12">
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full lg:hidden transition-colors hover:bg-[var(--sid-panel)]"
+            style={{ color: "var(--sid-ink)" }}
+            aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <FiX size={21} /> : <FiMenu size={21} />}
+          </button>
+
+          <Link
+            href="/visitor-dashboard"
+            className="shrink-0 select-none font-josefin text-lg font-normal uppercase tracking-[0.28em] sm:text-xl"
+            style={{ color: "var(--sid-ink)" }}
+            aria-label="Go to visitor dashboard"
+          >
+            Say I Do
+          </Link>
 
           {/* Search bar */}
-          <div className="hidden lg:flex flex-1 justify-center px-6">
+          <div className="hidden flex-1 justify-center px-4 md:flex lg:px-8">
             <SearchBar
               showIcon={false}
+              className="max-w-[540px]"
               placehHolderText={
                 isSignupForm
                   ? "Search disabled during sign up"
@@ -235,15 +264,15 @@ const VisitorHeader = () => {
           </div>
 
           {/* Dashboard, Notifications, and Profile dropdown */}
-          <div className="flex items-center justify-end gap-3 sm:gap-4 font-title text-text dark:text-zinc-200">
-            <nav className="flex items-center gap-1.5 sm:gap-2.5">
+          <div className="ml-auto flex items-center justify-end gap-1.5 sm:gap-3 font-josefin text-text dark:text-zinc-200">
+            <nav className="hidden items-center gap-5 lg:flex xl:gap-7">
               {navLinks.map((link) => {
                 const active = link.isActive(pathname);
                 if (isSignupForm) {
                   return (
                     <span
                       key={link.name}
-                      className="px-4 py-2 rounded-xl text-base sm:text-[17px] tracking-wide transition-all text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-400 hover:bg-gray-100/80 dark:hover:bg-zinc-800/60 font-semibold cursor-not-allowed select-none"
+                      className="min-h-11 border-b border-transparent px-1 py-3 text-[11px] uppercase tracking-[0.24em] text-gray-400 dark:text-zinc-500 cursor-not-allowed select-none"
                       title="Complete sign up to access"
                     >
                       {link.name}
@@ -254,10 +283,10 @@ const VisitorHeader = () => {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`px-4 py-2 rounded-xl text-base sm:text-[17px] tracking-wide transition-all ${
+                    className={`min-h-11 border-b px-1 py-3 text-[11px] uppercase tracking-[0.24em] transition-colors ${
                       active
-                        ? "bg-orange text-white shadow-xs font-bold"
-                        : "text-gray-700 dark:text-zinc-300 hover:text-orange hover:bg-orange/10 dark:hover:bg-zinc-800 font-semibold"
+                        ? "border-[var(--sid-gold)] font-semibold"
+                        : "border-transparent text-gray-600 dark:text-zinc-300 hover:border-[var(--sid-gold)] hover:text-[var(--sid-goldt)]"
                     }`}
                   >
                     {link.name}
@@ -269,7 +298,7 @@ const VisitorHeader = () => {
             {/* Chat icon with unread badge */}
             {isSignupForm ? (
               <span
-                className="relative p-2 rounded-xl transition-all flex items-center justify-center text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-400 hover:bg-gray-100/80 dark:hover:bg-zinc-800/60 font-semibold cursor-not-allowed select-none"
+                className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-gray-400 dark:text-zinc-500 cursor-not-allowed select-none"
                 title="Complete sign up to access"
               >
                 <BiMessageRounded className="w-[26px] h-[26px]" />
@@ -277,10 +306,10 @@ const VisitorHeader = () => {
             ) : (
               <Link
                 href={`/visitor-dashboard/chats/${visitor?.id}`}
-                className={`relative p-2 rounded-xl transition-all flex items-center justify-center ${
+                className={`relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition-colors ${
                   pathname.startsWith("/visitor-dashboard/chats")
-                    ? "bg-orange text-white shadow-xs font-bold"
-                    : "text-gray-700 dark:text-zinc-300 hover:text-orange hover:bg-orange/10 dark:hover:bg-zinc-800 font-semibold"
+                    ? "text-[var(--sid-goldt)]"
+                    : "text-gray-600 dark:text-zinc-300 hover:bg-[var(--sid-panel)] hover:text-[var(--sid-goldt)]"
                 }`}
                 title="Messages"
               >
@@ -312,7 +341,7 @@ const VisitorHeader = () => {
                 <button
                   type="button"
                   onClick={() => setShowNotificationMenu((prev) => !prev)}
-                  className="relative p-2 rounded-xl hover:bg-orange/10 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center text-gray-700 dark:text-zinc-300 hover:text-orange"
+                  className="relative inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition-colors text-gray-600 dark:text-zinc-300 hover:bg-[var(--sid-panel)] hover:text-[var(--sid-goldt)]"
                   title={
                     notificationCount > 0
                       ? `${notificationCount} notification${notificationCount === 1 ? "" : "s"}`
@@ -462,12 +491,12 @@ const VisitorHeader = () => {
             <button
               type="button"
               onClick={toggleTheme}
-              className="p-2 rounded-xl text-gray-700 dark:text-zinc-300 hover:text-orange hover:bg-orange/10 dark:hover:bg-zinc-800 transition-colors flex items-center justify-center cursor-pointer"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full text-gray-600 dark:text-zinc-300 hover:bg-[var(--sid-panel)] hover:text-[var(--sid-goldt)] transition-colors cursor-pointer"
               title="Toggle Theme"
               aria-label="Toggle Theme"
             >
-              <FiSun className="hidden dark:block w-[24px] h-[24px] text-amber-400 hover:rotate-45 transition-transform" />
-              <FiMoon className="block dark:hidden w-[24px] h-[24px] text-gray-700 dark:text-zinc-300 hover:text-orange transition-transform" />
+              <FiSun className="hidden dark:block w-[21px] h-[21px] text-[var(--sid-goldt)]" />
+              <FiMoon className="block dark:hidden w-[21px] h-[21px]" />
             </button>
 
             {/* Profile dropdown */}
@@ -549,6 +578,67 @@ const VisitorHeader = () => {
             </div>
           </div>
         </div>
+
+        <div className="border-t px-4 py-3 md:hidden" style={{ borderColor: "var(--sid-line)" }}>
+          <SearchBar
+            showIcon={false}
+            className="max-w-none"
+            placehHolderText={
+              isSignupForm
+                ? "Search disabled during sign up"
+                : "Search venues, caterers, etc."
+            }
+            disabled={isSignupForm}
+          />
+        </div>
+
+        {isMobileMenuOpen && (
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 top-[133px] z-40 bg-black/25 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label="Close navigation menu"
+            />
+            <div
+              className="absolute left-0 right-0 top-full z-50 border-t px-4 py-4 shadow-lg lg:hidden"
+              style={{ background: "var(--sid-bg)", borderColor: "var(--sid-line)" }}
+            >
+              <nav className="grid gap-1" aria-label="Mobile visitor navigation">
+                {navLinks.map((link) => {
+                  const active = link.isActive(pathname);
+
+                  if (isSignupForm) {
+                    return (
+                      <span
+                        key={link.name}
+                        className="min-h-11 px-3 py-3 text-xs uppercase tracking-[0.2em] opacity-50"
+                      >
+                        {link.name}
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="min-h-11 border-b px-3 py-3 text-xs uppercase tracking-[0.2em] transition-colors"
+                      style={{
+                        color: active ? "var(--sid-goldt)" : "var(--sid-ink)",
+                        borderColor: active ? "var(--sid-gold)" : "var(--sid-line)",
+                        fontWeight: active ? 600 : 400,
+                      }}
+                    >
+                      {link.name}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          </>
+        )}
       </header>
     </Fragment>
   );
