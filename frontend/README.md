@@ -232,9 +232,17 @@ npm test -- --coverage
 
 | File | Tests | Description |
 |---|---|---|
-| `test/header.test.jsx` | 4 cases | Header component renders correct variant based on auth state |
+| `test/header.test.jsx` | 4 cases | Authentication routing: visitor, vendor, unauthenticated, and visitor-over-vendor precedence |
 
 The Jest configuration is in `jest.config.js`. Path aliases (`@/`) are resolved via `moduleNameMapper`.
+
+To run the header authentication routing tests directly:
+
+```bash
+npm test -- --runInBand test/header.test.jsx
+```
+
+The current result is 4 passing tests.
 
 ### Writing New Tests
 
