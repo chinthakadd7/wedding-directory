@@ -1,9 +1,10 @@
 import React from 'react';
 import Link from 'next/link';
 import { FiArrowLeft } from 'react-icons/fi';
+import { calculatePercentage } from '@/utils/budgeter';
 
 const BudgetHeader = ({ budget = 0.00, totalCost = 0.00 }) => {
-  const utilizationPercentage = budget > 0 ? ((totalCost / budget) * 100).toFixed(1) : "0.0";
+  const utilizationPercentage = calculatePercentage(totalCost, budget, 1);
 
   return (
     <div className="bg-white dark:bg-darkSurface rounded-3xl border-2 border-orange/20 shadow-sm p-6 sm:p-8 relative overflow-hidden w-full">
