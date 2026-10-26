@@ -73,6 +73,7 @@
     "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@types/canvas-confetti": "^1.9.0",
@@ -87,6 +88,7 @@
     "eslint-config-next": "^16.3.6",
     "install": "^0.13.0",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.5.2",
     "npm": "^11.3.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
